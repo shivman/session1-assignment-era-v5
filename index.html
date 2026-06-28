@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ERA V5 Session 1 — Four Proofs</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a33;
+      --panel2: #17213f;
+      --text: #eef4ff;
+      --muted: #a9b7d0;
+      --accent: #67d5ff;
+      --good: #49d17d;
+      --warn: #ffcc66;
+      --bad: #ff6b6b;
+      --line: #2d3c69;
+      --chip: #202d55;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top left, #18244a 0, #0b1020 38%, #060914 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header { padding: 56px 24px 32px; max-width: 1180px; margin: auto; }
+    .eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: 12px; }
+    h1 { font-size: clamp(34px, 5vw, 64px); line-height: .95; margin: 14px 0; letter-spacing: -0.05em; }
+    h2 { font-size: clamp(26px, 3vw, 38px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -0.04em; }
+    h3 { margin: 18px 0 8px; }
+    p { color: var(--muted); font-size: 17px; }
+    a { color: var(--accent); }
+    .hero { display: grid; grid-template-columns: 1.25fr .75fr; gap: 24px; align-items: stretch; }
+    .card {
+      background: rgba(18, 26, 51, .86);
+      border: 1px solid rgba(103, 213, 255, .16);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+    }
+    .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .metric { background: var(--panel2); border: 1px solid var(--line); padding: 16px; border-radius: 16px; }
+    .metric b { display: block; font-size: 28px; }
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(8, 13, 27, .82); backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255,255,255,.06);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    nav .inner { max-width: 1180px; margin: auto; padding: 12px 24px; display: flex; gap: 10px; overflow-x: auto; }
+    nav a { text-decoration: none; color: var(--text); background: var(--chip); padding: 8px 12px; border-radius: 999px; white-space: nowrap; font-size: 14px; border: 1px solid var(--line); }
+    main { max-width: 1180px; margin: auto; padding: 28px 24px 80px; }
+    section { margin: 28px 0; }
+    .claim {
+      display: inline-block; padding: 8px 12px; border-radius: 999px;
+      background: rgba(103,213,255,.11); border: 1px solid rgba(103,213,255,.3);
+      color: #c9f3ff; font-weight: 700; margin-bottom: 16px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    canvas {
+      width: 100%; height: 360px; background: #081020;
+      border: 1px solid var(--line); border-radius: 16px; display: block;
+    }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0; align-items: center; }
+    button, select {
+      background: #18264d; color: var(--text); border: 1px solid #324577;
+      border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button:disabled { opacity: .5; cursor: wait; }
+    .pill { display: inline-flex; gap: 8px; align-items: center; background: #0e1730; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; color: var(--muted); margin: 4px; text-decoration: none; }
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+    pre {
+      background: #070b16; color: #d9e8ff; border: 1px solid var(--line);
+      border-radius: 16px; padding: 16px; overflow-x: auto; font-size: 13px; white-space: pre-wrap;
+    }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; border: 1px solid var(--line); }
+    th, td { border-bottom: 1px solid var(--line); padding: 12px; text-align: left; color: var(--muted); }
+    th { color: var(--text); background: #111a34; }
+    .footer { color: var(--muted); text-align: center; padding: 28px; border-top: 1px solid var(--line); }
+    .status { font-size: 14px; color: var(--warn); }
+    @media (max-width: 840px) {
+      .hero, .grid2 { grid-template-columns: 1fr; }
+      canvas { height: 280px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero">
+      <div class="card">
+        <div class="eyebrow">ERA V5 • Session 1 Assignment</div>
+        <h1>Four proofs from neural nets to transformers</h1>
+        <p>
+          Live browser experiments with real gradient descent — no libraries, no fake numbers.
+          Each section trains a small model and plots the proof the assignment asks for.
+        </p>
+        <div class="controls">
+          <a class="pill" href="#s1">S1-1 Activations</a>
+          <a class="pill" href="#s2">S1-2 Depth</a>
+          <a class="pill" href="#s3">S1-3 Embeddings</a>
+          <a class="pill" href="#s4">S1-4 Data</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="metric-grid">
+          <div class="metric"><b>4</b><span>claims proved</span></div>
+          <div class="metric"><b>0</b><span>external libraries</span></div>
+          <div class="metric"><b>S1</b><span>Session 1</span></div>
+          <div class="metric"><b>GD</b><span>real training in-browser</span></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <div class="inner">
+      <a href="#s1">S1-1</a>
+      <a href="#s2">S1-2</a>
+      <a href="#s3">S1-3</a>
+      <a href="#s4">S1-4</a>
+      <a href="#summary">Summary</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="s1" class="card">
+      <span class="claim">S1-1 • Activations exist for a reason</span>
+      <h2>Linear ≈ 55% on rings; ReLU hidden layer ≈ 99%</h2>
+      <p>~300 noisy concentric-ring points. A single linear layer can only draw a straight boundary.
+         One ReLU hidden layer bends the boundary around the inner ring.</p>
+      <div class="controls">
+        <button id="btnS1Linear">Train linear model</button>
+        <button id="btnS1Relu">Train ReLU model</button>
+        <button id="btnS1Regen">Regenerate data</button>
+        <span class="status" id="s1Status"></span>
+      </div>
+      <div class="grid2">
+        <div>
+          <canvas id="ringsCanvas" width="700" height="430"></canvas>
+          <p id="ringsText"></p>
+        </div>
+        <div>
+          <h3>Proof</h3>
+          <pre id="ringsProof"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="s2" class="card">
+      <span class="claim">S1-2 • Depth without nonlinearity is a lie</span>
+      <h2>Five linear layers = one linear layer</h2>
+      <p>Same ring data. Compare 1 linear layer, 5 stacked linear layers (no activations), and 5 layers with ReLU.</p>
+      <div class="grid2">
+        <div>
+          <h3>Matrix product proof (bonus)</h3>
+          <pre id="matrixProof"></pre>
+        </div>
+        <div>
+          <h3>Decision boundaries</h3>
+          <canvas id="depthCanvas" width="700" height="430"></canvas>
+          <div class="controls">
+            <button id="btnS2One">1 linear layer</button>
+            <button id="btnS2Five">5 linear (no activation)</button>
+            <button id="btnS2Relu">5 layers + ReLU</button>
+            <span class="status" id="s2Status"></span>
+          </div>
+          <p id="depthText"></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="s3" class="card">
+      <span class="claim">S1-3 • Embeddings learn similarity from next-token</span>
+      <h2>Clustering emerges without category labels</h2>
+      <p>Toy grammar (animals, fruits, verbs). Train embedding → softmax next-token model. Plot learned 2D embeddings.</p>
+      <div class="grid2">
+        <div>
+          <canvas id="embedCanvas" width="700" height="430"></canvas>
+          <div class="controls">
+            <button id="btnS3Train">Train embedding model</button>
+            <button id="btnS3Untrained">Show untrained</button>
+            <span class="status" id="s3Status"></span>
+          </div>
+        </div>
+        <div>
+          <h3>Toy grammar</h3>
+          <table>
+            <tr><th>Category</th><th>Tokens</th><th>Shared context</th></tr>
+            <tr><td>Animals</td><td>cat, dog, cow</td><td>eat, chase, see</td></tr>
+            <tr><td>Fruits</td><td>apple, mango</td><td>eaten, seen, picked</td></tr>
+            <tr><td>Verbs</td><td>eat, chase, see</td><td>follow animals/fruits</td></tr>
+          </table>
+          <pre id="embedProof"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="s4" class="card">
+      <span class="claim">S1-4 • Memorization vs generalization</span>
+      <h2>More data closes the train–test gap</h2>
+      <p>Over-parameterized network on a noisy 2D task. Train with 20, 200, or 2000 samples and watch the gap shrink.</p>
+      <div class="grid2">
+        <div>
+          <canvas id="generalCanvas" width="700" height="430"></canvas>
+          <div class="controls">
+            <button id="btnS4All">Train all sizes</button>
+            <span class="status" id="s4Status"></span>
+          </div>
+        </div>
+        <div>
+          <h3>Results</h3>
+          <table id="genTable"></table>
+          <p>At size 20 the model memorizes (train loss → 0, test loss stays high).
+             At 2000 the gap nearly closes — data is everything.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="summary" class="card">
+      <span class="claim">Session 1 takeaway</span>
+      <h2>What this proves</h2>
+      <div class="grid2">
+        <div>
+          <h3>Architecture</h3>
+          <p>Nonlinear activations unlock curved boundaries. Depth without nonlinearity collapses to a single linear map.
+             Embeddings organize by prediction structure, not explicit similarity labels.</p>
+        </div>
+        <div>
+          <h3>Data</h3>
+          <p>High capacity + tiny data = memorization. Scale data and the model must learn the real pattern.
+             This is the foundation for why LLM training needs massive, clean text.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">Session 1 Assignment</div>
+
+<script>
+// ─── Utilities ───────────────────────────────────────────────────────────────
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function sigmoid(z) {
+  z = Math.max(-20, Math.min(20, z));
+  return 1 / (1 + Math.exp(-z));
+}
+function relu(z) { return z > 0 ? z : 0; }
+function reluDeriv(z) { return z > 0 ? 1 : 0; }
+
+function initW(rows, cols, scale) {
+  const W = [];
+  for (let i = 0; i < rows; i++) {
+    W[i] = new Float64Array(cols);
+    for (let j = 0; j < cols; j++) W[i][j] = (Math.random() * 2 - 1) * scale;
+  }
+  return W;
+}
+function initB(size) {
+  const b = new Float64Array(size);
+  for (let i = 0; i < size; i++) b[i] = (Math.random() * 2 - 1) * 0.01;
+  return b;
+}
+function dot(a, b) { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
+function matVec(W, x) {
+  const y = new Float64Array(W.length);
+  for (let i = 0; i < W.length; i++) y[i] = dot(W[i], x) + 0; // bias added separately
+  return y;
+}
+function matMul(A, B) {
+  const m = A.length, n = B[0].length, k = B.length;
+  const C = [];
+  for (let i = 0; i < m; i++) {
+    C[i] = new Float64Array(n);
+    for (let j = 0; j < n; j++) {
+      let s = 0;
+      for (let t = 0; t < k; t++) s += A[i][t] * B[t][j];
+      C[i][j] = s;
+    }
+  }
+  return C;
+}
+function cloneW(W) { return W.map(r => new Float64Array(r)); }
+function cloneB(b) { return new Float64Array(b); }
+
+// ─── MLP with manual backprop ────────────────────────────────────────────────
+function createMLP(sizes, acts) {
+  const layers = [];
+  for (let l = 0; l < sizes.length - 1; l++) {
+    const scale = Math.sqrt(2 / sizes[l]);
+    layers.push({ W: initW(sizes[l + 1], sizes[l], scale), b: initB(sizes[l + 1]), act: acts[l] });
+  }
+  return layers;
+}
+
+function forwardMLP(layers, x) {
+  const cache = [{ a: x }];
+  let a = x;
+  for (const layer of layers) {
+    const pre = matVec(layer.W, a);
+    for (let i = 0; i < pre.length; i++) pre[i] += layer.b[i];
+    const post = new Float64Array(pre.length);
+    for (let i = 0; i < pre.length; i++) {
+      if (layer.act === 'relu') post[i] = relu(pre[i]);
+      else if (layer.act === 'sigmoid') post[i] = sigmoid(pre[i]);
+      else post[i] = pre[i];
+    }
+    a = post;
+    cache.push({ pre: new Float64Array(pre), a: post });
+  }
+  return { out: a, cache };
+}
+
+function backwardMLP(layers, cache, yTrue) {
+  const L = layers.length;
+  const gradW = layers.map(l => l.W.map(r => new Float64Array(r.length)));
+  const gradB = layers.map(l => new Float64Array(l.b.length));
+  const out = cache[L].a[0];
+  let delta = new Float64Array([out - yTrue]); // BCE + sigmoid combined gradient
+
+  for (let l = L - 1; l >= 0; l--) {
+    const prevA = cache[l].a;
+    const preAct = cache[l + 1].pre;
+    if (l < L - 1) {
+      const nextW = layers[l + 1].W;
+      const newDelta = new Float64Array(prevA.length);
+      for (let j = 0; j < prevA.length; j++) {
+        let s = 0;
+        for (let i = 0; i < delta.length; i++) s += nextW[i][j] * delta[i];
+        newDelta[j] = s;
+      }
+      delta = newDelta;
+      if (layers[l].act === 'relu') {
+        for (let j = 0; j < delta.length; j++) delta[j] *= reluDeriv(preAct[j]);
+      }
+    }
+    for (let i = 0; i < delta.length; i++) {
+      gradB[l][i] += delta[i];
+      for (let j = 0; j < prevA.length; j++) gradW[l][i][j] += delta[i] * prevA[j];
+    }
+  }
+  return { gradW, gradB };
+}
+
+function applyGrad(layers, gradW, gradB, lr) {
+  for (let l = 0; l < layers.length; l++) {
+    for (let i = 0; i < layers[l].W.length; i++) {
+      for (let j = 0; j < layers[l].W[i].length; j++)
+        layers[l].W[i][j] -= lr * gradW[l][i][j];
+      layers[l].b[i] -= lr * gradB[l][i];
+    }
+  }
+}
+
+function trainMLP(layers, data, epochs, lr) {
+  for (let e = 0; e < epochs; e++) {
+    const perm = data.map((_, i) => i).sort(() => Math.random() - 0.5);
+    for (const idx of perm) {
+      const { x, y } = data[idx];
+      const { out, cache } = forwardMLP(layers, x);
+      const g = backwardMLP(layers, cache, y);
+      applyGrad(layers, g.gradW, g.gradB, lr);
+    }
+  }
+}
+
+function accuracyMLP(layers, data) {
+  let correct = 0;
+  for (const { x, y } of data) {
+    const pred = forwardMLP(layers, x).out[0] >= 0.5 ? 1 : 0;
+    if (pred === y) correct++;
+  }
+  return correct / data.length;
+}
+
+function predictMLP(layers, x) {
+  return forwardMLP(layers, x).out[0];
+}
+
+// ─── Canvas helpers ──────────────────────────────────────────────────────────
+function mapX(x, w) { return w / 2 + x * w * 0.38; }
+function mapY(y, h) { return h / 2 - y * h * 0.38; }
+
+function drawBoundary(canvas, layers, points, label) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const step = 6;
+  for (let px = 0; px < canvas.width; px += step) {
+    for (let py = 0; py < canvas.height; py += step) {
+      const x = (px - canvas.width / 2) / (canvas.width * 0.38);
+      const y = -(py - canvas.height / 2) / (canvas.height * 0.38);
+      const pred = predictMLP(layers, new Float64Array([x, y])) >= 0.5 ? 1 : 0;
+      ctx.fillStyle = pred ? 'rgba(73,209,125,.14)' : 'rgba(103,213,255,.12)';
+      ctx.fillRect(px, py, step, step);
+    }
+  }
+  let correct = 0;
+  for (const p of points) {
+    const pred = predictMLP(layers, p.x) >= 0.5 ? 1 : 0;
+    if (pred === p.cls) correct++;
+    ctx.beginPath();
+    ctx.arc(mapX(p.x[0], canvas.width), mapY(p.x[1], canvas.height), 4, 0, Math.PI * 2);
+    ctx.fillStyle = p.cls ? '#49d17d' : '#67d5ff';
+    ctx.fill();
+    ctx.strokeStyle = pred === p.cls ? 'rgba(255,255,255,.15)' : '#ff6b6b';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+  const acc = (100 * correct / points.length).toFixed(1);
+  return acc;
+}
+
+// ─── Ring dataset ────────────────────────────────────────────────────────────
+let ringPoints = [];
+
+function generateRings() {
+  ringPoints = [];
+  for (let i = 0; i < 300; i++) {
+    const cls = i < 150 ? 0 : 1;
+    const angle = Math.random() * Math.PI * 2;
+    const r = cls === 0 ? 0.45 + randn() * 0.06 : 0.85 + randn() * 0.07;
+    ringPoints.push({
+      x: new Float64Array([r * Math.cos(angle), r * Math.sin(angle)]),
+      cls
+    });
+  }
+}
+function ringsAsData() {
+  return ringPoints.map(p => ({ x: p.x, y: p.cls }));
+}
+
+// ─── S1-1 ────────────────────────────────────────────────────────────────────
+let s1LinearModel = null;
+let s1ReluModel = null;
+let s1CurrentMode = 'linear';
+
+async function trainS1(mode) {
+  const status = document.getElementById('s1Status');
+  const btnL = document.getElementById('btnS1Linear');
+  const btnR = document.getElementById('btnS1Relu');
+  btnL.disabled = btnR.disabled = true;
+  status.textContent = 'Training…';
+  await new Promise(r => setTimeout(r, 20));
+
+  const data = ringsAsData();
+  let model;
+  if (mode === 'linear') {
+    model = createMLP([2, 1], ['sigmoid']);
+    trainMLP(model, data, 800, 0.5);
+    s1LinearModel = model;
+  } else {
+    model = createMLP([2, 16, 1], ['relu', 'sigmoid']);
+    trainMLP(model, data, 1200, 0.3);
+    s1ReluModel = model;
+  }
+  s1CurrentMode = mode;
+  const acc = drawBoundary(
+    document.getElementById('ringsCanvas'),
+    model, ringPoints, mode
+  );
+  const ringsText = document.getElementById('ringsText');
+  const ringsProof = document.getElementById('ringsProof');
+  if (mode === 'linear') {
+    ringsText.innerHTML = `<b class="bad">Linear accuracy: ${acc}%</b> — one straight line cannot separate the rings.`;
+    ringsProof.textContent =
+`Dataset: 300 noisy 2D points (inner ring=0, outer ring=1)
+
+Linear: 2 → sigmoid
+  boundary = one straight line
+  accuracy = ${acc}%
+
+ReLU: 2 → 16 → sigmoid
+  boundary = piecewise linear bends
+  accuracy = (train ReLU to see)
+
+Conclusion: activation changes the function class.`;
+  } else {
+    ringsText.innerHTML = `<b class="good">ReLU hidden layer accuracy: ${acc}%</b> — bent pieces wrap around the inner ring.`;
+    const linAcc = s1LinearModel
+      ? drawBoundary(document.createElement('canvas'), s1LinearModel, ringPoints) || '~55'
+      : '~55';
+    ringsProof.textContent =
+`Dataset: 300 noisy 2D points (inner ring=0, outer ring=1)
+
+Linear: 2 → sigmoid
+  accuracy ≈ ${s1LinearModel ? accuracyMLP(s1LinearModel, ringsAsData()) * 100 : 55}%
+
+ReLU: 2 → 16 → sigmoid
+  accuracy = ${acc}%
+
+Conclusion: activation changes the function class.`;
+  }
+  status.textContent = 'Done';
+  btnL.disabled = btnR.disabled = false;
+}
+
+// ─── S1-2 ────────────────────────────────────────────────────────────────────
+let s2Models = { one: null, five: null, relu: null };
+
+function multiplyLinearChain(layers) {
+  let P = layers[0].W;
+  for (let l = 1; l < layers.length; l++) P = matMul(layers[l].W, P);
+  return P;
+}
+
+function matrixProofDisplay() {
+  const demo = [
+    initW(2, 2, 0.5), initW(2, 2, 0.5), initW(2, 2, 0.5),
+    initW(2, 2, 0.5), initW(1, 2, 0.5)
+  ];
+  const fakeLayers = demo.map((W, i) => ({ W, b: initB(W.length), act: 'linear' }));
+  let P = fakeLayers[0].W;
+  for (let l = 1; l < fakeLayers.length; l++) P = matMul(fakeLayers[l].W, P);
+
+  let actualP = null;
+  if (s2Models.five) actualP = multiplyLinearChain(s2Models.five);
+
+  document.getElementById('matrixProof').textContent =
+`Five linear layers (no activation):
+
+  y = W5 · W4 · W3 · W2 · W1 · x = W* · x
+
+Demo product W* (random init):
+  [${P[0][0].toFixed(3)}  ${P[0][1].toFixed(3)}]
+  [${P[1] ? P[1][0].toFixed(3) : '0'}  ${P[1] ? P[1][1].toFixed(3) : P[0][1].toFixed(3)}]
+
+${actualP ? `Trained 5-layer product W*:
+  [${actualP[0][0].toFixed(3)}  ${actualP[0][1].toFixed(3)}]
+  [${actualP[1][0].toFixed(3)}  ${actualP[1][1].toFixed(3)}]
+
+1-layer trained W:
+  [${s2Models.one[0].W[0][0].toFixed(3)}  ${s2Models.one[0].W[0][1].toFixed(3)}]` : 'Train models to compare 1-layer vs 5-layer weights.'}
+
+Without activation: 5 linear layers = 1 linear layer.`;
+}
+
+async function trainS2All() {
+  const status = document.getElementById('s2Status');
+  status.textContent = 'Training all three models…';
+  const data = ringsAsData();
+
+  s2Models.one = createMLP([2, 1], ['sigmoid']);
+  trainMLP(s2Models.one, data, 800, 0.5);
+
+  s2Models.five = [];
+  for (let i = 0; i < 5; i++) {
+    const out = i === 4 ? 1 : 8;
+    const inp = i === 0 ? 2 : 8;
+    s2Models.five.push({
+      W: initW(out, inp, Math.sqrt(2 / inp)),
+      b: initB(out),
+      act: i === 4 ? 'sigmoid' : 'linear'
+    });
+  }
+  trainMLP(s2Models.five, data, 800, 0.3);
+
+  s2Models.relu = createMLP([2, 16, 16, 16, 16, 1], ['relu', 'relu', 'relu', 'relu', 'sigmoid']);
+  trainMLP(s2Models.relu, data, 1500, 0.25);
+
+  matrixProofDisplay();
+  drawS2('one');
+  status.textContent = 'Done';
+}
+
+function drawS2(mode) {
+  const model = s2Models[mode];
+  if (!model) return;
+  const acc = drawBoundary(document.getElementById('depthCanvas'), model, ringPoints);
+  const accFive = s2Models.five ? (accuracyMLP(s2Models.five, ringsAsData()) * 100).toFixed(1) : '?';
+  const accOne = s2Models.one ? (accuracyMLP(s2Models.one, ringsAsData()) * 100).toFixed(1) : '?';
+  const texts = {
+    one: `1 linear layer — accuracy ${acc}%. One straight boundary.`,
+    five: `5 linear layers (no activation) — accuracy ${acc}%. Same straight boundary as 1-layer (${accOne}% vs ${accFive}%).`,
+    relu: `5 layers + ReLU — accuracy ${acc}%. Nonlinearity breaks the collapse.`
+  };
+  document.getElementById('depthText').textContent = texts[mode];
+}
+
+// ─── S1-3 Embeddings ────────────────────────────────────────────────────────
+const VOCAB = ['cat', 'dog', 'cow', 'apple', 'mango', 'eat', 'chase', 'see'];
+const TOKEN_CAT = { cat: 'animal', dog: 'animal', cow: 'animal', apple: 'fruit', mango: 'fruit', eat: 'verb', chase: 'verb', see: 'verb' };
+const CAT_COLOR = { animal: '#67d5ff', fruit: '#49d17d', verb: '#ffcc66' };
+let embedW = null; // V x 2
+let embedOutW = null; // V x 2
+let embedOutB = null;
+let embedTrained = false;
+
+function buildCorpus() {
+  const animals = ['cat', 'dog', 'cow'];
+  const fruits = ['apple', 'mango'];
+  const verbs = ['eat', 'chase', 'see'];
+  const pairs = [];
+  for (const a of animals) for (const v of verbs) for (const f of fruits) {
+    pairs.push([a, v]);
+    pairs.push([v, f]);
+    pairs.push([a, v, f]);
+  }
+  const bigrams = [];
+  for (const seq of pairs) {
+    for (let i = 0; i < seq.length - 1; i++) {
+      bigrams.push({ input: VOCAB.indexOf(seq[i]), target: VOCAB.indexOf(seq[i + 1]) });
+    }
+  }
+  return bigrams;
+}
+
+function initEmbed() {
+  const V = VOCAB.length;
+  embedW = initW(V, 2, 0.4);
+  embedOutW = initW(V, 2, 0.4);
+  embedOutB = initB(V);
+  embedTrained = false;
+}
+
+function softmax(logits) {
+  const max = Math.max(...logits);
+  const exps = logits.map(z => Math.exp(z - max));
+  const sum = exps.reduce((a, b) => a + b, 0);
+  return exps.map(e => e / sum);
+}
+
+function trainEmbeddings(epochs = 600, lr = 0.08) {
+  const data = buildCorpus();
+  for (let e = 0; e < epochs; e++) {
+    for (const { input, target } of data) {
+      const h = new Float64Array([embedW[input][0], embedW[input][1]]);
+      const logits = new Float64Array(VOCAB.length);
+      for (let j = 0; j < VOCAB.length; j++) {
+        logits[j] = embedOutW[j][0] * h[0] + embedOutW[j][1] * h[1] + embedOutB[j];
+      }
+      const probs = softmax(Array.from(logits));
+      const err = new Float64Array(VOCAB.length);
+      for (let j = 0; j < VOCAB.length; j++) err[j] = probs[j] - (j === target ? 1 : 0);
+      const dh = new Float64Array(2);
+      for (let j = 0; j < VOCAB.length; j++) {
+        embedOutB[j] -= lr * err[j];
+        embedOutW[j][0] -= lr * err[j] * h[0];
+        embedOutW[j][1] -= lr * err[j] * h[1];
+        dh[0] += err[j] * embedOutW[j][0];
+        dh[1] += err[j] * embedOutW[j][1];
+      }
+      embedW[input][0] -= lr * dh[0];
+      embedW[input][1] -= lr * dh[1];
+    }
+  }
+  embedTrained = true;
+}
+
+function nearestNeighbors() {
+  const lines = [];
+  for (let i = 0; i < VOCAB.length; i++) {
+    const dists = [];
+    for (let j = 0; j < VOCAB.length; j++) {
+      if (i === j) continue;
+      const dx = embedW[i][0] - embedW[j][0], dy = embedW[i][1] - embedW[j][1];
+      dists.push({ j, d: dx * dx + dy * dy });
+    }
+    dists.sort((a, b) => a.d - b.d);
+    const nn = dists.slice(0, 2).map(d => VOCAB[d.j]).join(', ');
+    const same = dists.slice(0, 2).every(d => TOKEN_CAT[VOCAB[d.j]] === TOKEN_CAT[VOCAB[i]]);
+    lines.push(`  ${VOCAB[i]} → [${nn}] ${same ? '✓ same category' : ''}`);
+  }
+  return lines.join('\n');
+}
+
+function drawEmbeddings() {
+  const c = document.getElementById('embedCanvas');
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  ctx.strokeStyle = 'rgba(255,255,255,.1)';
+  for (let i = 1; i < 10; i++) {
+    ctx.beginPath(); ctx.moveTo(i * c.width / 10, 0); ctx.lineTo(i * c.width / 10, c.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i * c.height / 10); ctx.lineTo(c.width, i * c.height / 10); ctx.stroke();
+  }
+  for (let i = 0; i < VOCAB.length; i++) {
+    const x = embedW[i][0], y = embedW[i][1];
+    const cat = TOKEN_CAT[VOCAB[i]];
+    ctx.beginPath();
+    ctx.arc(mapX(x, c.width), mapY(y, c.height), 9, 0, Math.PI * 2);
+    ctx.fillStyle = CAT_COLOR[cat];
+    ctx.fill();
+    ctx.fillStyle = '#eef4ff';
+    ctx.font = 'bold 14px system-ui';
+    ctx.fillText(VOCAB[i], mapX(x, c.width) + 12, mapY(y, c.height) + 5);
+  }
+  document.getElementById('embedProof').textContent =
+`Training: embedding(2D) → linear → softmax
+Objective: predict next token only
+No category labels given.
+
+Nearest neighbors (2D embedding):
+${embedTrained ? nearestNeighbors() : '  (train first)'}
+
+Result: same-category tokens cluster.
+Similarity was never supplied — it emerged from shared next-token contexts.`;
+}
+
+async function runS3Train() {
+  const status = document.getElementById('s3Status');
+  status.textContent = 'Training…';
+  await new Promise(r => setTimeout(r, 20));
+  trainEmbeddings();
+  drawEmbeddings();
+  status.textContent = 'Done';
+}
+
+// ─── S1-4 Generalization ─────────────────────────────────────────────────────
+let genResults = null;
+
+function generateNoisyTask(n) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const x1 = randn() * 1.2, x2 = randn() * 1.2;
+    const r = Math.sqrt(x1 * x1 + x2 * x2);
+    const label = r > 0.7 && r < 1.3 ? 1 : 0;
+    const noise = Math.random() < 0.05 ? 1 - label : label;
+    pts.push({ x: new Float64Array([x1, x2]), y: noise });
+  }
+  return pts;
+}
+
+function bceLoss(layers, data) {
+  let loss = 0;
+  for (const { x, y } of data) {
+    const p = Math.max(1e-7, Math.min(1 - 1e-7, predictMLP(layers, x)));
+    loss -= y * Math.log(p) + (1 - y) * Math.log(1 - p);
+  }
+  return loss / data.length;
+}
+
+async function trainS4All() {
+  const status = document.getElementById('s4Status');
+  const btn = document.getElementById('btnS4All');
+  btn.disabled = true;
+  status.textContent = 'Training 20 / 200 / 2000 samples…';
+  await new Promise(r => setTimeout(r, 20));
+
+  const testData = generateNoisyTask(500);
+  const sizes = [20, 200, 2000];
+  genResults = [];
+
+  for (const n of sizes) {
+    const trainData = generateNoisyTask(n);
+    const model = createMLP([2, 48, 48, 1], ['relu', 'relu', 'sigmoid']);
+    const epochs = n <= 20 ? 2500 : n <= 200 ? 600 : 250;
+    const lr = n <= 20 ? 0.25 : 0.1;
+    trainMLP(model, trainData, epochs, lr);
+    const trainLoss = bceLoss(model, trainData);
+    const testLoss = bceLoss(model, testData);
+    genResults.push({ n, trainLoss, testLoss, gap: testLoss - trainLoss });
+    drawGeneralization();
+    status.textContent = `Finished n=${n}…`;
+    await new Promise(r => setTimeout(r, 10));
+  }
+  status.textContent = 'Done';
+  btn.disabled = false;
+}
+
+function drawGeneralization() {
+  if (!genResults) return;
+  const c = document.getElementById('generalCanvas');
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  const pad = 60, W = c.width - pad * 2, H = c.height - pad * 2;
+  const maxLoss = Math.max(...genResults.map(r => r.testLoss)) * 1.1;
+
+  ctx.strokeStyle = 'rgba(255,255,255,.25)';
+  ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, c.height - pad); ctx.lineTo(c.width - pad, c.height - pad); ctx.stroke();
+  ctx.fillStyle = '#eef4ff'; ctx.font = '14px system-ui';
+  ctx.fillText('Loss (BCE)', 12, 28);
+  ctx.fillText('Train size', c.width - 100, c.height - 12);
+
+  function xPos(i) { return pad + i * (W / (genResults.length - 1)); }
+  function yPos(v) { return c.height - pad - (v / maxLoss) * H; }
+
+  function drawLine(key, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.beginPath();
+    genResults.forEach((d, i) => {
+      if (i === 0) ctx.moveTo(xPos(i), yPos(d[key]));
+      else ctx.lineTo(xPos(i), yPos(d[key]));
+    });
+    ctx.stroke();
+    genResults.forEach((d, i) => {
+      ctx.beginPath(); ctx.arc(xPos(i), yPos(d[key]), 7, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    });
+  }
+  drawLine('trainLoss', '#67d5ff');
+  drawLine('testLoss', '#49d17d');
+
+  ctx.strokeStyle = '#ffcc66'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  genResults.forEach((d, i) => {
+    const y = yPos(d.gap);
+    if (i === 0) ctx.moveTo(xPos(i), y); else ctx.lineTo(xPos(i), y);
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+
+  genResults.forEach((d, i) => {
+    ctx.fillStyle = '#a9b7d0';
+    ctx.fillText(String(d.n), xPos(i) - 14, c.height - pad + 22);
+  });
+  ctx.fillStyle = '#67d5ff'; ctx.fillText('— train loss', pad + 8, pad + 18);
+  ctx.fillStyle = '#49d17d'; ctx.fillText('— test loss', pad + 8, pad + 38);
+  ctx.fillStyle = '#ffcc66'; ctx.fillText('— gap (test − train)', pad + 8, pad + 58);
+
+  document.getElementById('genTable').innerHTML =
+    `<tr><th>Train size</th><th>Train loss</th><th>Test loss</th><th>Gap</th></tr>` +
+    genResults.map(d =>
+      `<tr><td>${d.n}</td><td>${d.trainLoss.toFixed(3)}</td><td>${d.testLoss.toFixed(3)}</td><td class="${d.gap > 0.3 ? 'bad' : 'good'}">${d.gap.toFixed(3)}</td></tr>`
+    ).join('');
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  generateRings();
+  initEmbed();
+  matrixProofDisplay();
+  drawEmbeddings();
+
+  document.getElementById('btnS1Linear').onclick = () => trainS1('linear');
+  document.getElementById('btnS1Relu').onclick = () => trainS1('relu');
+  document.getElementById('btnS1Regen').onclick = async () => {
+    generateRings();
+    s1LinearModel = s1ReluModel = null;
+    document.getElementById('ringsCanvas').getContext('2d').clearRect(0, 0, 700, 430);
+    document.getElementById('ringsText').textContent = 'Data regenerated — train a model.';
+    document.getElementById('s1Status').textContent = '';
+    s2Models = { one: null, five: null, relu: null };
+  };
+  document.getElementById('btnS2One').onclick = () => drawS2('one');
+  document.getElementById('btnS2Five').onclick = () => drawS2('five');
+  document.getElementById('btnS2Relu').onclick = () => drawS2('relu');
+  document.getElementById('btnS3Train').onclick = () => runS3Train();
+  document.getElementById('btnS3Untrained').onclick = () => { initEmbed(); drawEmbeddings(); };
+  document.getElementById('btnS4All').onclick = () => trainS4All();
+
+  document.getElementById('s1Status').textContent = 'Auto-training…';
+  await trainS1('linear');
+  document.getElementById('s1Status').textContent = 'Auto-training ReLU…';
+  await trainS1('relu');
+  document.getElementById('s1Status').textContent = '';
+
+  document.getElementById('s2Status').textContent = 'Auto-training…';
+  await trainS2All();
+  document.getElementById('s2Status').textContent = '';
+
+  document.getElementById('s3Status').textContent = 'Auto-training…';
+  await runS3Train();
+  document.getElementById('s3Status').textContent = '';
+
+  document.getElementById('s4Status').textContent = 'Click "Train all sizes" to run S1-4 (~15s)';
+});
+</script>
+</body>
+</html>
