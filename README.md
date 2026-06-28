@@ -1,8 +1,8 @@
-# ERA V5 Session 1 Assignment — Interactive Web App
+# Neural Network Proofs — Interactive Web App
 
 Static browser app with **real gradient-descent training** (no libraries, no hardcoded numbers).
 
-## What it proves
+## What it demonstrates
 
 | Section | Claim | What you see |
 |---------|-------|--------------|
@@ -22,15 +22,15 @@ python3 -m http.server 8080
 
 S1-1 through S1-3 auto-train on load. Click **Train all sizes** for S1-4 (~15 seconds).
 
-## Deploy to Netlify (for submission)
+## Deploy to Netlify
 
 1. Go to [https://app.netlify.com](https://app.netlify.com) and sign up / log in.
-2. Drag and drop the `era_v5_session1_assignment` folder onto the deploy area.
+2. Connect this GitHub repo or drag and drop the project folder.
 3. Copy the public URL (e.g. `https://your-site-name.netlify.app`).
 4. Test in an **incognito window** to confirm it's public.
-5. Submit on Axiom:
-   - **URL:** your Netlify link
-   - **Caption:** `Interactive web app proving Session 1 concepts: activations, linear depth collapse, emergent embeddings, and data vs memorization`
-   - Check the incognito accessibility box
 
 No build step required.
+
+## Live demo
+
+https://asgn-session1.netlify.app/
